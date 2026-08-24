@@ -1,0 +1,13 @@
+**pycache**/
+.ipynb_checkpoints/
+dataset*/
+Training/
+Testing/
+*.pth
+*.pt
+*.pem
+*.key
+*.crt
+*.jpg
+*.png
+.env

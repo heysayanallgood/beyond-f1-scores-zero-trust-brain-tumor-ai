@@ -1,0 +1,11 @@
+{
+  "project": "Zero-Trust Brain Tumor Classification",
+  "test_accuracy": 0.9524,
+  "controls": {
+    "model_integrity": "PASS",
+    "rbac": "PASS",
+    "mtls": "PASS",
+    "audit": "PASS"
+  },
+  "generated_at_utc": "2026-08-24T19:09:54.454660+00:00"
+}

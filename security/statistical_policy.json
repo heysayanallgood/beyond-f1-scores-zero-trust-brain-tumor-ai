@@ -1,0 +1,13 @@
+{
+  "policy": "mean_plus_minus_3_sigma",
+  "thresholds": {
+    "mean": {
+      "min": -0.025,
+      "max": 0.385
+    },
+    "std": {
+      "min": 0.041,
+      "max": 0.303
+    }
+  }
+}
