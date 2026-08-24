@@ -1,46 +1,33 @@
-````markdown
 # 🧠 Beyond F1-Scores
 
 ### Zero-Trust, Adversarial-Resistant Brain Tumor AI
 
 > **Can we trust an AI prediction—not just measure its accuracy?**
 
-![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
-![PyTorch](https://img.shields.io/badge/PyTorch-EfficientNetB0-EE4C2C?logo=pytorch&logoColor=white)
-![Google Colab](https://img.shields.io/badge/Google%20Colab-T4-F9AB00?logo=googlecolab&logoColor=white)
-![Security](https://img.shields.io/badge/Security-Zero--Trust-6C47FF)
-![mTLS](https://img.shields.io/badge/mTLS-Validated-0EA5E9)
-![RBAC](https://img.shields.io/badge/RBAC-Validated-F59E0B)
-![Validation Accuracy](https://img.shields.io/badge/Validation%20Accuracy-95.24%25-16A34A)
-![License](https://img.shields.io/badge/License-MIT-22C55E)
+[![Model](https://img.shields.io/badge/Model-EfficientNetB0-2563eb)](https://pytorch.org/vision/stable/models/generated/torchvision.models.efficientnet_b0.html)
+[![Validation Accuracy](https://img.shields.io/badge/Validation%20Accuracy-95.24%25-16a34a)](#-performance)
+[![Security](https://img.shields.io/badge/Security-Zero--Trust-7c3aed)](#-security-architecture)
+[![mTLS](https://img.shields.io/badge/mTLS-Validated-0891b2)](#-zero--trust-access-control)
+[![RBAC](https://img.shields.io/badge/RBAC-Validated-f59e0b)](#-zero--trust-access-control)
+[![License](https://img.shields.io/badge/License-MIT-green)](#-license)
 
 ---
 
-## 🚨 The Problem
+## 🎯 Why this project?
 
-Medical AI is often evaluated with one question:
+Modern medical AI often focuses on one question:
 
 > **How accurate is the model?**
 
-But a high-performing model can still become unsafe if:
+This project asks a harder question:
 
-- its weight file is silently modified,
-- the MRI input is manipulated,
-- an unauthorized user accesses inference,
-- a request is replayed,
-- or the diagnostic audit trail is altered.
+> **Can the prediction still be trusted when the model, MRI input, user identity, or audit trail is under attack?**
 
-That creates the central question of this project:
+**Beyond F1-Scores** combines a four-class brain tumor MRI classifier with a **Zero-Trust cybersecurity perimeter** around inference.
 
-> ## **Can we trust the prediction — not just the accuracy number?**
+Instead of replacing the trained AI, the project protects the existing model with security decisions that happen **before, during, and after inference**.
 
----
-
-# 🎯 Project Vision
-
-**Beyond F1-Scores** combines a brain tumor MRI classifier with a **Zero-Trust cybersecurity perimeter** around inference.
-
-Instead of changing the trained AI model, the project protects the existing classifier through:
+### Core principle
 
 ```text
 Accuracy
@@ -49,16 +36,579 @@ Integrity
    +
 Provenance
    +
-Adversarial Robustness
-   +
 Access Control
    +
 Auditability
    =
 Trusted AI Pipeline
-````
+```
 
 ---
+
+# 🧩 System Architecture
+
+```mermaid
+flowchart LR
+    A["🧠 MRI Input"] --> B["🔐 Provenance Check"]
+    B --> C["📊 Statistical Defense"]
+    C --> D["🔏 Model Integrity<br/>SHA-256"]
+    D --> E["🛡️ RBAC / mTLS Gateway"]
+    E --> F["🤖 EfficientNetB0<br/>Inference"]
+    F --> G["📜 Hash-Linked Audit"]
+    
+    B -. "file hash + metadata" .-> H["Trust Decision"]
+    C -. "input statistics" .-> H
+    D -. "model fingerprint" .-> H
+    E -. "identity + role" .-> H
+    H -->|"ACCEPT / REVIEW / REJECT"| F
+```
+
+### Zero-Trust rule
+
+> **If an integrity, provenance, identity, authorization, or policy check fails, the request must not silently continue to inference.**
+
+---
+
+# 🔬 AI Baseline
+
+The project uses **EfficientNetB0 with transfer learning** for four MRI classes:
+
+| Class        | Description            |
+| ------------ | ---------------------- |
+| `glioma`     | Glioma tumor class     |
+| `meningioma` | Meningioma tumor class |
+| `notumor`    | No-tumor class         |
+| `pituitary`  | Pituitary tumor class  |
+
+The existing AI pipeline is intentionally preserved.
+
+### Training strategy
+
+```text
+Pretrained EfficientNetB0
+        ↓
+Frozen feature extractor
+        ↓
+Custom Dropout + Linear classifier
+        ↓
+Classifier-head training
+        ↓
+Selective deeper-layer fine-tuning
+        ↓
+Four-class MRI classification
+```
+
+The cybersecurity contribution is deliberately **external to the trained model**.
+
+---
+
+# 🛡️ Security Architecture
+
+## 1. 🔏 Model Integrity — SHA-256
+
+The trained model is treated as a cryptographically identifiable artifact.
+
+```text
+brain_tumor_model.pth
+        ↓
+      SHA-256
+        ↓
+Trusted fingerprint
+        ↓
+Compare before inference
+```
+
+If the model file changes unexpectedly:
+
+```text
+Expected hash ≠ Actual hash
+           ↓
+      INTEGRITY FAIL
+           ↓
+        BLOCK
+```
+
+A controlled tamper-copy experiment is used so the original model remains untouched.
+
+---
+
+## 2. 🧾 MRI Provenance
+
+Every protected input can be associated with a reproducible cryptographic footprint.
+
+Tracked information includes:
+
+* input file hash
+* file metadata
+* image representation
+* request information
+* timestamp
+* model fingerprint
+
+This provides **file-integrity and provenance tracking** for the inference pipeline.
+
+> Provenance tracking does not by itself prove the clinical origin of an MRI.
+
+---
+
+## 3. 📊 Statistical Input Defense
+
+Before inference, the security layer evaluates measurable properties of the input image.
+
+Examples include:
+
+* intensity statistics
+* mean and standard deviation
+* image dimensions
+* range/consistency checks
+
+Normal operating ranges are calibrated from project validation data.
+
+Suspicious inputs can be routed to:
+
+```text
+ACCEPT
+REVIEW
+REJECT
+```
+
+The security policy is intentionally separated from **model confidence**.
+
+---
+
+## 4. 🎯 Security Trust Score
+
+The project uses a dedicated **security trust score**.
+
+It is **not**:
+
+* diagnostic confidence
+* disease probability
+* medical certainty
+
+It represents whether the inference request satisfies the project's security policy.
+
+Example:
+
+```text
+Model Integrity       ✓
+Provenance            ✓
+Input Statistics      ✓
+Authorization         ✓
+Replay Check          ✓
+                      ↓
+                 TRUST SCORE
+                      ↓
+                    ACCEPT
+```
+
+Current validated demonstration:
+
+**Trust Score: `100/100`**
+
+---
+
+# ⚔️ Adversarial Robustness
+
+The project evaluates how the existing classifier behaves under controlled adversarial perturbations.
+
+### FGSM experiment
+
+```text
+Clean MRI
+   ↓
+EfficientNetB0
+   ↓
+Baseline prediction
+
+       +
+
+Controlled perturbation
+       ↓
+Adversarial MRI
+       ↓
+EfficientNetB0
+       ↓
+Robustness measurement
+```
+
+The experiment measures the change between clean and perturbed inputs without updating the model weights.
+
+This provides an **experimental robustness measurement**, not a claim of complete adversarial immunity.
+
+---
+
+# 🔐 Zero-Trust Access Control
+
+Inference is not considered available to every user in every way.
+
+### RBAC policy
+
+| Role            | Predict | View Report | Manage Model |
+| --------------- | :-----: | :---------: | :----------: |
+| **Radiologist** |    ✅    |      ✅      |       ❌      |
+| **Researcher**  |    ✅    |      ❌      |       ❌      |
+| **Admin**       |    ✅    |      ✅      |       ✅      |
+
+Negative authorization tests are intentionally part of the validation process.
+
+Example:
+
+```text
+Researcher → view_report
+           ↓
+         DENIED
+           ↓
+      Security PASS
+```
+
+A denied unauthorized action is a **successful security result**, not an application failure.
+
+---
+
+# 🔒 Mutual TLS (mTLS)
+
+The project includes a real local mutual-TLS demonstration.
+
+```text
+Client
+  ↕
+Certificate authentication
+  ↕
+Server
+```
+
+The validated workflow demonstrates:
+
+```text
+Valid client certificate
+        ↓
+     ACCEPT ✅
+
+Missing / invalid client certificate
+        ↓
+     REJECT ✅
+```
+
+The implementation is a **local project demonstration** rather than a claim of production hospital-grade PKI infrastructure.
+
+---
+
+# ♻️ Replay Protection
+
+Each protected inference request is associated with a unique request identifier.
+
+A replayed request is rejected instead of silently being processed again.
+
+```text
+Request #001 → ACCEPT ✅
+Request #001 → REPLAY → REJECT ✅
+```
+
+---
+
+# 📜 Tamper-Evident Auditability
+
+Security events are stored in a **hash-linked audit chain**.
+
+```text
+LOG₁
+ │
+ └── current_hash
+        ↓
+LOG₂
+ │
+ └── current_hash
+        ↓
+LOG₃
+ │
+ └── current_hash
+```
+
+Each record incorporates the previous record's cryptographic state.
+
+### Tamper experiment
+
+```text
+Original audit chain → VALID ✅
+
+Modify historical record
+        ↓
+Recalculate chain
+        ↓
+CHAIN INVALID
+        ↓
+TAMPER DETECTED ✅
+```
+
+This makes unauthorized historical modification detectable.
+
+---
+
+# 🚀 Secure Inference Gateway
+
+The final protected inference path is:
+
+```text
+User Request
+     ↓
+mTLS
+     ↓
+RBAC
+     ↓
+Replay Check
+     ↓
+Model SHA-256 Verification
+     ↓
+MRI Provenance
+     ↓
+Statistical Defense
+     ↓
+Security Trust Decision
+     ↓
+Existing EfficientNetB0
+     ↓
+Prediction
+     ↓
+Hash-Linked Audit
+```
+
+### Key architectural idea
+
+> **Security decisions sit around the model, not after it.**
+
+The existing EfficientNetB0 classifier remains the intelligence engine; the Zero-Trust layer determines whether an inference request is trustworthy enough to reach it.
+
+---
+
+# 📈 Performance & Security
+
+| Dimension                         | Validated Result |
+| --------------------------------- | ---------------: |
+| **Validation Accuracy**           |       **95.24%** |
+| **Model Integrity**               |           ✅ PASS |
+| **Model Tamper Detection**        |           ✅ PASS |
+| **MRI Provenance**                |           ✅ PASS |
+| **Statistical Defense**           |          ✅ VALID |
+| **Security Trust Score**          |      **100/100** |
+| **FGSM Robustness Evaluation**    |           ✅ PASS |
+| **RBAC Policy Tests**             |           ✅ PASS |
+| **mTLS Valid Client**             |           ✅ PASS |
+| **mTLS Missing Client Rejection** |           ✅ PASS |
+| **Replay Protection**             |           ✅ PASS |
+| **Secure Inference Gateway**      |           ✅ PASS |
+| **Audit Chain**                   |           ✅ PASS |
+| **Audit Tamper Detection**        |           ✅ PASS |
+| **Model Hash Preservation**       |           ✅ PASS |
+| **Model Parameter Preservation**  |           ✅ PASS |
+
+> Results above reflect the project's final validated execution. Detailed machine-readable evidence is available in the `security/` directory.
+
+---
+
+# 🧪 Security Validation Matrix
+
+| Attack / Failure Scenario          | Security Response                           |
+| ---------------------------------- | ------------------------------------------- |
+| Modified model weights             | 🚫 Detected                                 |
+| Unexpected MRI modification        | 🚫 Flagged by provenance/integrity controls |
+| Suspicious input statistics        | 🚫 Review / reject policy                   |
+| Unauthorized RBAC action           | 🚫 Denied                                   |
+| Missing/invalid client certificate | 🚫 Rejected                                 |
+| Replayed request                   | 🚫 Rejected                                 |
+| Modified audit history             | 🚫 Tampering detected                       |
+| Valid authorized inference         | ✅ Allowed                                   |
+
+---
+
+# 📂 Repository Structure
+
+```text
+.
+├── README.md
+├── LICENSE
+├── .gitignore
+│
+├── notebooks/
+│   └── MRI_Tumor_DETECTION_FINAL_ZEROTRUST.ipynb
+│
+├── security/
+│   ├── SECURITY_RESULTS.md
+│   ├── security_report.json
+│   ├── security_metrics.csv
+│   ├── statistical_policy.json
+│   └── trusted_model_manifest.json
+│
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── SECURITY.md
+│   ├── THREAT_MODEL.md
+│   └── REPRODUCTION.md
+│
+└── assets/
+```
+
+---
+
+# ▶️ Reproducibility
+
+The project is designed around a Google Colab workflow.
+
+### High-level workflow
+
+```text
+1. Open the final notebook
+2. Enable GPU runtime
+3. Mount Google Drive
+4. Provide the MRI dataset
+5. Execute the existing AI pipeline
+6. Execute the Zero-Trust security layer
+7. Review the final security artifacts
+```
+
+The public repository intentionally excludes:
+
+* raw MRI datasets
+* private credentials
+* certificates/private keys
+* model weight files that are not intended for redistribution
+
+This keeps the repository lightweight and avoids exposing sensitive or unnecessary artifacts.
+
+---
+
+# 📊 Evidence & Artifacts
+
+Final security evidence is available under:
+
+```text
+security/
+```
+
+Key files include:
+
+```text
+SECURITY_RESULTS.md
+security_report.json
+security_metrics.csv
+statistical_policy.json
+trusted_model_manifest.json
+```
+
+These files provide reproducible evidence for the security controls implemented in the project.
+
+---
+
+# 🧠 Research Gap
+
+Traditional model evaluation often stops at:
+
+```text
+Accuracy → F1 → Confusion Matrix
+```
+
+This project extends the evaluation boundary to:
+
+```text
+Accuracy
+   ↓
+Integrity
+   ↓
+Provenance
+   ↓
+Adversarial Robustness
+   ↓
+Identity & Authorization
+   ↓
+Replay Protection
+   ↓
+Auditability
+```
+
+The objective is not simply to ask:
+
+> **"Can the model classify?"**
+
+but also:
+
+> **"Can we trust the prediction pipeline that produced the classification?"**
+
+---
+
+# ⚠️ Limitations & Responsible Use
+
+This project is a **research and academic cybersecurity demonstration**.
+
+It should not be interpreted as:
+
+* a clinically validated diagnostic system
+* a replacement for radiologists
+* a production hospital security architecture
+* proof of complete adversarial immunity
+* proof of clinical safety
+* proof of protection against all possible attacks
+
+The security controls are validated within the project's experimental environment and threat model.
+
+---
+
+# 🔮 Future Work
+
+Potential future extensions include:
+
+* stronger adversarial defense strategies
+* model signing and trusted key infrastructure
+* hardware-backed key protection
+* production-grade service isolation
+* containerized deployment
+* distributed audit storage
+* continuous security monitoring
+* explainable AI integration
+* broader robustness benchmarking
+* deployment-oriented privacy controls
+
+---
+
+# 👥 Team
+
+**BCSE306L — Artificial Intelligence**
+
+Project:
+
+**Beyond F1-Scores: Architecting Zero-Trust, Adversarial-Resistant Deep Learning Frameworks for Brain Tumor Classification**
+
+---
+
+# 📚 References
+
+The implementation and project framing are based on the team's AI project specification, security architecture, and final experimental notebook.
+
+Relevant technologies include:
+
+* PyTorch
+* Torchvision
+* EfficientNetB0
+* SHA-256
+* Python SSL/TLS
+* Role-Based Access Control
+* FGSM adversarial evaluation
+* Hash-linked audit logging
+* Google Colab
+
+---
+
+## ⭐ The Core Idea
+
+> **High accuracy is the beginning of trustworthy AI—not the end.**
+
+**Beyond F1-Scores** places a Zero-Trust security perimeter around an existing medical AI classifier so that **model integrity, MRI provenance, authorization, adversarial robustness, replay protection, and auditability become part of the inference pipeline itself.**
+
+---
+
+### 🔐 Accuracy tells us what the model can do.
+
+### 🛡️ Zero-Trust asks whether we should trust how it did it.
+
 
 # 🧬 AI Baseline
 
